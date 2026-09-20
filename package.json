@@ -1,13 +1,13 @@
 {
   "name": "forex-learning",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "author": "Forex Lab PH",
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "test": "node --test tests/*.test.js",
-    "check": "npm run test && node scripts/static-check.mjs && node --check src/app.js && node --check src/chart.js && node --check src/core.js && node --check src/curriculum.js && node --check src/drills.js && node --check src/events.js && node --check src/data-utils.js && node --check scripts/download-history.mjs && node --check scripts/serve.mjs && node --check scripts/update.mjs && npm run desktop:check",
+    "check": "npm run test && node scripts/static-check.mjs && node --check src/app.js && node --check src/chart.js && node --check src/core.js && node --check src/curriculum.js && node --check src/drills.js && node --check src/events.js && node --check src/data-utils.js && node --check src/adaptive.js && node --check src/coach.js && node --check scripts/download-history.mjs && node --check scripts/serve.mjs && node --check scripts/update.mjs && npm run desktop:check",
     "data:sample": "node scripts/download-history.mjs --sample",
     "data:all": "node scripts/download-history.mjs --all",
     "start": "node scripts/serve.mjs",
@@ -24,7 +24,7 @@
     "node": ">=18"
   },
   "main": "desktop/main.cjs",
-  "description": "Forex Lab PH — Taglish forex learning and historical practice desktop app.",
+  "description": "Forex Lab PH — Taglish forex learning, adaptive coaching and historical practice desktop app.",
   "devDependencies": {
     "electron": "43.7.3",
     "electron-builder": "26.16.1"
