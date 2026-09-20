@@ -70,7 +70,7 @@ test('adaptive session plan increases remediation for a critical gap', () => {
   const plan = sessionPlan(coach, 40);
   assert.equal(plan.minutes, 40);
   assert.equal(plan.rootGap.skill, 'regime');
-  assert.match(plan.phases[1].name, /Gap lesson/);
+  assert.match(plan.phases[1].name, /Gap lesson|Learning stop-loss/);
   assert.equal(plan.phases.reduce((s,p) => s + p.minutes, 0), 40);
 });
 

@@ -212,6 +212,7 @@ function renderCoach(body) {
 function renderGapCheck(skill) {
   const area = document.querySelector('#gapTestArea');
   if (!area) return;
+  delete area.dataset.done;
   const l = gapLesson(coach, skill);
   const started = Date.now();
   area.innerHTML = `<div class="gap-check"><strong>${escapeHtml(l.check.q)}</strong><div class="coach-choice-grid">${l.check.choices.map(c => `<button data-gap-answer="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join('')}</div><div class="confidence-row"><span>Confidence</span>${[25,50,75,100].map(n => `<button data-gap-confidence="${n}" class="${n===50?'active':''}">${n}%</button>`).join('')}</div><div id="gapResult"></div></div>`;

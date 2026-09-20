@@ -309,16 +309,26 @@ export function failureSummary(coach) {
 }
 
 export function learningStopLoss(coach, now = Date.now()) {
-  const recent = (coach.attempts || []).filter(a => now - new Date(a.at || 0).getTime() <= 90 * 60000).slice(-8);
+  const recent = (coach.attempts || [])
+    .filter(a => now - new Date(a.at || 0).getTime() <= 90 * 60000)
+    .slice(-12);
   if (recent.length < 3) return null;
-  const lastSkill = recent.at(-1)?.skill;
-  const same = recent.filter(a => a.skill === lastSkill).slice(-4);
-  const trailing = [...same].reverse();
-  let consecutiveMisses = 0;
-  for (const a of trailing) { if (a.correct) break; consecutiveMisses += 1; }
-  const wrongCount = same.filter(a => !a.correct).length;
-  if (consecutiveMisses < 3 && wrongCount < 4) return null;
-  return { skill:lastSkill, misses:Math.max(consecutiveMisses, wrongCount), prerequisite:(DEPENDENCIES[lastSkill] || [])[0] || null };
+  const skills = [...new Set(recent.map(a => a.skill).filter(Boolean))];
+  let best = null;
+  for (const skill of skills) {
+    const rows = recent.filter(a => a.skill === skill).slice(-5);
+    let consecutiveMisses = 0;
+    for (const a of [...rows].reverse()) {
+      if (a.correct) break;
+      consecutiveMisses += 1;
+    }
+    const wrongCount = rows.filter(a => !a.correct).length;
+    const misses = Math.max(consecutiveMisses, wrongCount);
+    if ((consecutiveMisses >= 3 || wrongCount >= 4) && (!best || misses > best.misses)) {
+      best = { skill, misses, prerequisite:(DEPENDENCIES[skill] || [])[0] || null };
+    }
+  }
+  return best;
 }
 
 export function detectRootGap(coach, now = Date.now()) {
