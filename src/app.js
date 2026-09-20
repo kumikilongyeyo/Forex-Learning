@@ -419,9 +419,11 @@ function resolveTrade(status, candle) {
   const s = sessionState, t = s.openTrade;
   if (!t) return;
   let pnl = 0;
-  if (status === 'stop') pnl = -t.riskUsd;
-  if (status === 'target') pnl = t.riskUsd * (t.targetPips / t.stopPips);
-  s.trades.push({ ...t, status, pnl, closedAt: candle.timestamp });
+  let exit = null;
+  if (status === 'stop') exit = t.stop;
+  if (status === 'target') exit = t.target;
+  if (exit != null) pnl = tradePnlUsd({ pair: cleanPair(s.meta.pair), direction: t.direction, entry: t.entry, exit, lots: t.lots });
+  s.trades.push({ ...t, status, pnl, exit, closedAt: candle.timestamp });
   if (status !== 'ambiguous') applySessionPnl(pnl);
   s.openTrade = null;
 }

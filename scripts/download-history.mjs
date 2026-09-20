@@ -1,7 +1,7 @@
 import { getHistoricalRates } from 'dukascopy-node';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { aggregateCandles } from '../src/data-utils.js';
+import { aggregateCandles, dedupeCandles } from '../src/data-utils.js';
 
 const sample = process.argv.includes('--sample');
 const all = process.argv.includes('--all');
@@ -62,10 +62,10 @@ for (const pair of pairs) {
     });
     m15.push(...normalizeRows(rows));
   }
-  m15.sort((a, b) => a.timestamp - b.timestamp);
-  const h1 = aggregateCandles(m15, 60);
-  const h4 = aggregateCandles(m15, 240);
-  await writeDataset(pair, 'M15', m15);
+  const cleanM15 = dedupeCandles(m15);
+  const h1 = aggregateCandles(cleanM15, 60);
+  const h4 = aggregateCandles(cleanM15, 240);
+  await writeDataset(pair, 'M15', cleanM15);
   await writeDataset(pair, 'H1', h1);
   await writeDataset(pair, 'H4', h4);
 }

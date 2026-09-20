@@ -16,3 +16,13 @@ export function aggregateCandles(candles, minutes) {
   }
   return [...buckets.values()].sort((a, b) => a.timestamp - b.timestamp);
 }
+
+export function dedupeCandles(candles) {
+  if (!Array.isArray(candles)) return [];
+  const byTimestamp = new Map();
+  for (const candle of candles) {
+    if (!candle || !Number.isFinite(candle.timestamp)) continue;
+    byTimestamp.set(candle.timestamp, candle);
+  }
+  return [...byTimestamp.values()].sort((a, b) => a.timestamp - b.timestamp);
+}

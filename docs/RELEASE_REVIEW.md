@@ -14,11 +14,12 @@
 
 ## Senior developer — 10/10 gate
 - [x] Plain HTML/CSS/JS runtime; no frontend framework required.
-- [x] 21 automated tests pass.
+- [x] 22 automated tests pass.
 - [x] USD-major pip value and lot-size math tested.
 - [x] Quote-USD and base-USD manual P/L math tested.
 - [x] Stop/target both-hit candle remains explicitly ambiguous.
 - [x] M15 → H1/H4 OHLC aggregation extracted to a pure tested function.
+- [x] Year-batch timestamp deduplication is tested before aggregation/replay.
 - [x] Dense-drill generation tested across all six skills.
 - [x] Spaced-repetition reset/prioritization tested.
 - [x] Event nearest-timestamp lookup and source coverage tested.
@@ -54,7 +55,7 @@
 
 ## Final verification evidence
 
-- Automated tests: **21/21 passing**.
+- Automated tests: **22/22 passing**.
 - Static gate: **60 lessons, 4 practice modes, M15/H1/H4 path, 8 sourced events**.
 - Chromium interaction QA: **pass, zero page/console errors**.
 - Visual review: dense-drill, trading-session, event-reveal and progress screens checked at 1440×1000.
