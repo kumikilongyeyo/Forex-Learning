@@ -7,3 +7,5 @@ public/data/*.json
 
 # Local QA screenshots
 docs/ui-*.png
+
+docs/v02-*.png
