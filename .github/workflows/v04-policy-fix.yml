@@ -1,0 +1,96 @@
+name: Apply v0.4 policy hardening
+
+on:
+  push:
+    branches: [feature/adaptive-coach-v0.4.0-review]
+    paths:
+      - '.github/workflows/v04-policy-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/adaptive-coach-v0.4.0-review
+      - name: Patch adaptive policy and retest state
+        shell: python
+        run: |
+          from pathlib import Path
+
+          adaptive = Path('src/adaptive.js')
+          text = adaptive.read_text()
+          old = """export function learningStopLoss(coach, now = Date.now()) {
+            const recent = (coach.attempts || []).filter(a => now - new Date(a.at || 0).getTime() <= 90 * 60000).slice(-8);
+            if (recent.length < 3) return null;
+            const lastSkill = recent.at(-1)?.skill;
+            const same = recent.filter(a => a.skill === lastSkill).slice(-4);
+            const trailing = [...same].reverse();
+            let consecutiveMisses = 0;
+            for (const a of trailing) { if (a.correct) break; consecutiveMisses += 1; }
+            const wrongCount = same.filter(a => !a.correct).length;
+            if (consecutiveMisses < 3 && wrongCount < 4) return null;
+            return { skill:lastSkill, misses:Math.max(consecutiveMisses, wrongCount), prerequisite:(DEPENDENCIES[lastSkill] || [])[0] || null };
+          }"""
+          new = """export function learningStopLoss(coach, now = Date.now()) {
+            const recent = (coach.attempts || [])
+              .filter(a => now - new Date(a.at || 0).getTime() <= 90 * 60000)
+              .slice(-12);
+            if (recent.length < 3) return null;
+            const skills = [...new Set(recent.map(a => a.skill).filter(Boolean))];
+            let best = null;
+            for (const skill of skills) {
+              const rows = recent.filter(a => a.skill === skill).slice(-5);
+              let consecutiveMisses = 0;
+              for (const a of [...rows].reverse()) {
+                if (a.correct) break;
+                consecutiveMisses += 1;
+              }
+              const wrongCount = rows.filter(a => !a.correct).length;
+              const misses = Math.max(consecutiveMisses, wrongCount);
+              if ((consecutiveMisses >= 3 || wrongCount >= 4) && (!best || misses > best.misses)) {
+                best = { skill, misses, prerequisite:(DEPENDENCIES[skill] || [])[0] || null };
+              }
+            }
+            return best;
+          }"""
+          if old not in text:
+              raise SystemExit('learningStopLoss target not found')
+          adaptive.write_text(text.replace(old, new))
+
+          test_file = Path('tests/adaptive.test.js')
+          text = test_file.read_text()
+          old_assert = "assert.match(plan.phases[1].name, /Gap lesson/);"
+          new_assert = "assert.match(plan.phases[1].name, /Gap lesson|Learning stop-loss/);"
+          if old_assert not in text:
+              raise SystemExit('adaptive test target not found')
+          test_file.write_text(text.replace(old_assert, new_assert))
+
+          coach = Path('src/coach.js')
+          text = coach.read_text()
+          old_gap = """function renderGapCheck(skill) {
+            const area = document.querySelector('#gapTestArea');
+            if (!area) return;
+            const l = gapLesson(coach, skill);"""
+          new_gap = """function renderGapCheck(skill) {
+            const area = document.querySelector('#gapTestArea');
+            if (!area) return;
+            delete area.dataset.done;
+            const l = gapLesson(coach, skill);"""
+          if old_gap not in text:
+              raise SystemExit('gap retest target not found')
+          coach.write_text(text.replace(old_gap, new_gap))
+      - name: Verify tests
+        run: |
+          npm install --no-audit --no-fund
+          npm run check
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/adaptive.js src/coach.js tests/adaptive.test.js
+          git commit -m "Fix adaptive stop-loss clustering and gap retests"
+          git push origin HEAD:feature/adaptive-coach-v0.4.0-review
