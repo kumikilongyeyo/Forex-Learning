@@ -1,0 +1,37 @@
+name: Adaptive Coach browser smoke
+
+on:
+  pull_request:
+    paths:
+      - 'src/adaptive.js'
+      - 'src/coach.js'
+      - 'src/coach.css'
+      - 'index.html'
+      - 'scripts/coach-smoke.mjs'
+      - '.github/workflows/coach-smoke.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/adaptive.js'
+      - 'src/coach.js'
+      - 'src/coach.css'
+      - 'index.html'
+      - 'scripts/coach-smoke.mjs'
+      - '.github/workflows/coach-smoke.yml'
+  workflow_dispatch:
+
+jobs:
+  coach-browser-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install --no-audit --no-fund
+      - name: Install Playwright for interaction QA
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run Adaptive Coach browser smoke
+        run: node scripts/coach-smoke.mjs
