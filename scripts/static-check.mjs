@@ -1,0 +1,11 @@
+import { readFile, access } from 'node:fs/promises';
+const required=['index.html','src/app.js','src/core.js','src/chart.js','src/curriculum.js','src/styles.css','public/data/manifest.json','README.md'];
+for(const f of required) await access(f);
+const html=await readFile('index.html','utf8');
+if(!html.includes('Forex Lab PH')) throw new Error('Title missing');
+const curriculum=await readFile('src/curriculum.js','utf8');
+const lessonMatches=[...curriculum.matchAll(/lesson\('m\d+l\d+'/g)];
+if(lessonMatches.length<60) throw new Error(`Expected >=60 lessons; found ${lessonMatches.length}`);
+const app=await readFile('src/app.js','utf8');
+for(const term of ['BUY','SELL','NO TRADE','Asia/Manila']) if(!app.includes(term)) throw new Error(`Missing ${term}`);
+console.log(`Static checks passed: ${lessonMatches.length} lessons, required modes and PH timezone present.`);
