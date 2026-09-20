@@ -2,33 +2,37 @@
 
 A Taglish forex learning guide with dense historical drills, replay, trading-session simulation, and sourced historical-event challenges.
 
-## Easiest Mac install — no Node.js, no Terminal
+## Easiest desktop install — no Node.js, no Terminal
 
-For normal Mac use, download the desktop installer from **GitHub Releases**:
+### macOS
 
-1. Download `Forex-Lab-PH-<version>-universal.pkg`.
+1. Download `Forex-Lab-PH-<version>-universal.pkg` from **GitHub Releases**.
 2. Double-click the installer.
 3. Open **Forex Lab PH** from Applications.
 4. Go to **Practice** and click **Install Starter Data**.
 
 The Mac app bundles its own runtime. You do **not** need to install Node.js, npm, Git, or run Terminal commands.
 
-### Updating the Mac app
+Install a newer `.pkg` over the existing app to update. The package uses macOS upgrade replacement, so the old app bundle is replaced while progress and market data are preserved in Application Support.
 
-Install the newer `.pkg` over the existing app. The package uses macOS **upgrade replacement**, so the installed app bundle is atomically replaced and obsolete paths from the previous app version are removed.
+> The current direct Mac build is not Developer-ID notarized yet. If macOS blocks first launch, Control-click **Forex Lab PH** in Applications → **Open** → confirm once.
 
-The app deliberately preserves:
+See `docs/MAC_APP.md`.
 
-- learning / drill / session progress;
-- downloaded historical market data.
+### Windows
 
-Those live in macOS Application Support, outside the replaceable app bundle. On a version change, Forex Lab also clears old Electron HTTP / code / GPU caches.
+1. Download `Forex-Lab-PH-<version>-Windows-x64.exe` from **GitHub Releases**.
+2. Run the installer.
+3. Open **Forex Lab PH** from the Start menu or desktop shortcut.
+4. Go to **Practice** and click **Install Starter Data**.
 
-It does **not** automatically delete arbitrary installer files from your Downloads folder.
+The Windows app also bundles its own runtime. No Node.js, npm, Git, PowerShell, or Command Prompt setup is required.
 
-> The current direct build is not Developer-ID notarized yet. If macOS blocks first launch, Control-click **Forex Lab PH** in Applications → **Open** → confirm once.
+Windows uses a stable NSIS upgrade GUID. Installing a newer Forex Lab PH installer replaces the older installed program files instead of creating a second app. Progress and downloaded market data live separately under the app user-data directory and are preserved across upgrades.
 
-See `docs/MAC_APP.md` for the desktop packaging/update details.
+> The current Windows build is unsigned, so Microsoft SmartScreen may show **Windows protected your PC**. Use **More info → Run anyway** only if you downloaded the installer from this repository's official GitHub Release.
+
+See `docs/WINDOWS_APP.md`.
 
 ## What v0.3 includes
 
@@ -46,7 +50,7 @@ Practice has four sub-modes so the main UI stays simple:
 4. **Historical events** — mystery challenges around sourced real-world central-bank/intervention events. The headline/date is revealed only after your decision and replay.
 
 ### Desktop data install
-Inside the Mac app, Practice shows:
+Inside the Mac and Windows apps, Practice shows:
 
 - **Install Starter Data** — EUR/USD, GBP/USD, USD/JPY.
 - **Install Full 6-Pair Data** — adds AUD/USD, USD/CAD, USD/CHF.
@@ -94,6 +98,7 @@ Desktop development/build commands:
 ```bash
 npm run desktop:dev
 npm run desktop:build:mac
+npm run desktop:build:win
 ```
 
 ## Testing
@@ -103,7 +108,7 @@ npm test
 npm run check
 ```
 
-The release gate covers forex math, pip conventions, position sizing, P/L conversion for USD majors, bracket ambiguity, indicators, drill generation, spaced repetition, aggregation, historical-event sourcing, desktop syntax, static feature checks, and browser interaction QA.
+The release gate covers forex math, pip conventions, position sizing, P/L conversion for USD majors, bracket ambiguity, indicators, drill generation, spaced repetition, aggregation, historical-event sourcing, desktop syntax, static feature checks, and desktop package builds.
 
 ## Release workflow
 
@@ -118,11 +123,11 @@ PR + GitHub Actions
    ↓
 main
    ↓
-macOS universal PKG/ZIP build
+macOS universal PKG/ZIP + Windows x64 EXE/ZIP
    ↓
 GitHub Release
 ```
 
-See `docs/RELEASE_REVIEW.md`, `docs/DATA_SOURCES.md`, and `docs/MAC_APP.md`.
+See `docs/RELEASE_REVIEW.md`, `docs/DATA_SOURCES.md`, `docs/MAC_APP.md`, and `docs/WINDOWS_APP.md`.
 
 This project is educational software, not financial advice, a signal service, a broker, or a profitability claim. Past market behavior does not guarantee future results.

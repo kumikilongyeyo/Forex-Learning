@@ -51,7 +51,10 @@ jobs:
           $TAG = "v$VERSION"
           gh release view $TAG 2>$null
           if ($LASTEXITCODE -ne 0) {
-            gh release create $TAG --target $env:GITHUB_SHA --title "Forex Lab PH $TAG" --notes "Desktop release for macOS and Windows."
+            gh release create $TAG --target $env:GITHUB_SHA --title "Forex Lab PH $TAG" --notes "Desktop release for macOS and Windows. Newer installers replace obsolete program files while preserving learning progress and downloaded market data."
+            if ($LASTEXITCODE -ne 0) {
+              gh release view $TAG | Out-Null
+            }
           }
           Get-ChildItem dist -File | Where-Object { $_.Name -like '*Windows*' -and ($_.Extension -eq '.exe' -or $_.Extension -eq '.zip') } | ForEach-Object {
             gh release upload $TAG $_.FullName --clobber
