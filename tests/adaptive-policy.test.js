@@ -53,3 +53,16 @@ test('difficulty band does not jump to hard from tiny samples', () => {
   coach.attempts = [row('candles', true)];
   assert.equal(difficultyBand(coach, 'candles'), 'guided');
 });
+
+
+test('fatigue ignores stale mistakes from an older study session', async () => {
+  const { fatigueScore } = await import('../src/adaptive.js');
+  const old = Date.now() - 6 * 60 * 60000;
+  const attempts = Array.from({length:8}, (_,i) => ({
+    skill:'regime', correct:false, responseMs:9000,
+    at:new Date(old - i * 60000).toISOString()
+  }));
+  const fatigue = fatigueScore(attempts);
+  assert.equal(fatigue.label, 'Fresh');
+  assert.equal(fatigue.score, 15);
+});

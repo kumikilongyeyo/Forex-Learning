@@ -17,6 +17,11 @@ let currentGauntlet = null;
 let toastTimer = null;
 let targetNoticeShown = Boolean(coach.activeSession?.targetNoticeShown);
 let fatigueNoticeAt = coach.attempts.length;
+let lastActivityAt = Date.now();
+const IDLE_MS = 90 * 1000;
+
+function markActivity() { lastActivityAt = Date.now(); }
+function isEngaged(now = Date.now()) { return !document.hidden && now - lastActivityAt <= IDLE_MS; }
 
 function persist() { saveCoachState(coach); }
 
@@ -66,7 +71,11 @@ function startLoops() {
   timerHandle = setInterval(tickTimer, 1000);
   contextHandle = setInterval(trackContext, 10000);
   syncHandle = setInterval(syncProgress, 2500);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && coach.activeSession && !coach.activeSession.paused) coach.activeSession.lastTickAt = Date.now(); });
+  ['pointerdown','keydown','wheel','touchstart'].forEach(type => document.addEventListener(type, markActivity, { passive:true }));
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) markActivity();
+    if (!document.hidden && coach.activeSession && !coach.activeSession.paused) coach.activeSession.lastTickAt = Date.now();
+  });
   document.addEventListener('click', event => {
     const view = event.target.closest?.('[data-view]')?.dataset.view;
     const practice = event.target.closest?.('[data-practice]')?.dataset.practice;
@@ -98,7 +107,7 @@ function currentContext() {
 }
 
 function trackContext() {
-  if (document.hidden) return;
+  if (!isEngaged()) return;
   const key = currentContext();
   coach.contextTime[key] = (coach.contextTime[key] || 0) + 10;
   persist();
@@ -118,7 +127,7 @@ function fmt(sec) {
 function tickTimer() {
   const s = coach.activeSession;
   const now = Date.now();
-  if (s && !s.paused && !document.hidden) {
+  if (s && !s.paused && isEngaged(now)) {
     const prior = Number(s.lastTickAt || now);
     const delta = Math.min(3, Math.max(0, (now - prior) / 1000));
     s.activeSeconds = Number(s.activeSeconds || 0) + delta;
@@ -193,7 +202,7 @@ function renderCoach(body) {
     <section class="coach-card focus-card">
       <div class="coach-row"><div><span class="coach-kicker">Focus Guard</span><h3 id="coachTimerText">--:--</h3></div><span class="focus-state">${escapeHtml(fatigue.label)}</span></div>
       <div class="coach-progress"><span id="coachTimerBar"></span></div>
-      ${coach.activeSession ? `<p>${coach.activeSession.paused ? 'Paused. Rest is allowed.' : 'Timer counts active foreground learning time. It will not cut off a question.'}</p><div class="coach-actions"><button id="pauseCoach">${coach.activeSession.paused ? 'Resume' : 'Pause'}</button><button id="endCoach" class="danger-soft">End session</button></div>` : `<p>Recommended today: <strong>${recommended} min</strong>. You can change this in Plan.</p><button id="quickStartCoach" class="coach-primary">Start ${recommended}-min session</button>`}
+      ${coach.activeSession ? `<p>${coach.activeSession.paused ? 'Paused. Rest is allowed.' : 'Timer counts engaged foreground learning time and pauses after 90 seconds idle. It will not cut off a question.'}</p><div class="coach-actions"><button id="pauseCoach">${coach.activeSession.paused ? 'Resume' : 'Pause'}</button><button id="endCoach" class="danger-soft">End session</button></div>` : `<p>Recommended today: <strong>${recommended} min</strong>. You can change this in Plan.</p><button id="quickStartCoach" class="coach-primary">Start ${recommended}-min session</button>`}
     </section>
     ${lesson ? `<section class="coach-card gap-card"><span class="coach-kicker">Gap lesson • ${escapeHtml(lesson.levelLabel)}</span><h3>${escapeHtml(lesson.title)}</h3><p>${escapeHtml(lesson.explanation)}</p><div class="coach-actions"><button id="simplerGap">Explain even simpler</button><button id="testGap" class="coach-primary">Test this gap</button></div><div id="gapTestArea"></div></section>` : ''}
     <section class="coach-card"><div class="coach-row"><div><span class="coach-kicker">Confidence calibration</span><strong>${escapeHtml(calibration.label)}</strong></div><b>${calibration.samples ? `${calibration.gap > 0 ? '+' : ''}${calibration.gap}` : '—'}</b></div><p>${calibration.samples ? `${calibration.samples} confidence-tagged answers. Positive gap = confidence is running ahead of accuracy.` : 'Gauntlet and gap checks collect confidence so the app can detect confident misconceptions.'}</p></section>

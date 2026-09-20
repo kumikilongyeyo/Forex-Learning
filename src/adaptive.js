@@ -377,8 +377,12 @@ export function confidenceCalibration(coach) {
   return { samples:rows.length, averageConfidence:Math.round(averageConfidence), accuracy:Math.round(accuracy), gap:Math.round(gap), label:gap > 12 ? 'Often overconfident' : gap < -12 ? 'Often underconfident' : 'Well calibrated' };
 }
 
-export function fatigueScore(attempts = []) {
-  const recent = attempts.slice(-12);
+export function fatigueScore(attempts = [], now = Date.now()) {
+  const recent = (attempts || []).filter(a => {
+    const at = new Date(a.at || 0).getTime();
+    const age = now - at;
+    return Number.isFinite(at) && age >= 0 && age <= 120 * 60000;
+  }).slice(-12);
   if (recent.length < 4) return { score:15, label:'Fresh', reasons:[] };
   const first = recent.slice(0, Math.ceil(recent.length / 2));
   const last = recent.slice(Math.ceil(recent.length / 2));
