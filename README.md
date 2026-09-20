@@ -1,8 +1,36 @@
 # Forex Lab PH
 
-A localhost-first Taglish forex learning guide and historical practice lab. The UI stays deliberately simple: **Learn**, **Practice**, **Progress**, and **Sources**.
+A Taglish forex learning guide with dense historical drills, replay, trading-session simulation, and sourced historical-event challenges.
 
-## What v0.2 includes
+## Easiest Mac install — no Node.js, no Terminal
+
+For normal Mac use, download the desktop installer from **GitHub Releases**:
+
+1. Download `Forex-Lab-PH-<version>-universal.pkg`.
+2. Double-click the installer.
+3. Open **Forex Lab PH** from Applications.
+4. Go to **Practice** and click **Install Starter Data**.
+
+The Mac app bundles its own runtime. You do **not** need to install Node.js, npm, Git, or run Terminal commands.
+
+### Updating the Mac app
+
+Install the newer `.pkg` over the existing app. The package uses macOS **upgrade replacement**, so the installed app bundle is atomically replaced and obsolete paths from the previous app version are removed.
+
+The app deliberately preserves:
+
+- learning / drill / session progress;
+- downloaded historical market data.
+
+Those live in macOS Application Support, outside the replaceable app bundle. On a version change, Forex Lab also clears old Electron HTTP / code / GPU caches.
+
+It does **not** automatically delete arbitrary installer files from your Downloads folder.
+
+> The current direct build is not Developer-ID notarized yet. If macOS blocks first launch, Control-click **Forex Lab PH** in Applications → **Open** → confirm once.
+
+See `docs/MAC_APP.md` for the desktop packaging/update details.
+
+## What v0.3 includes
 
 ### Learn
 - 60 sequential core lessons across 10 modules.
@@ -10,12 +38,20 @@ A localhost-first Taglish forex learning guide and historical practice lab. The 
 - Foundations → chart reading → structure → risk → indicators → sessions → fundamentals → backtesting → psychology.
 
 ### Practice
-Practice has four sub-modes so the main UI does not turn into a cockpit:
+Practice has four sub-modes so the main UI stays simple:
 
 1. **Dense drills** — 20-question sessions generated from random historical windows. Categories cover structure, future-outcome buckets, candle reading, EMA alignment, RSI zones, and USD-major risk sizing. Weak and due skills are weighted more heavily using local spaced repetition.
 2. **Replay** — random historical window with the future hidden. Lock BUY / SELL / NO TRADE, then reveal +1, +5, or all future candles.
-3. **Trading session** — USD training account, random historical start, live-style candle stepping/auto-play, market BUY/SELL, risk %, stop, target, approximate lot sizing, manual close, session P/L, max drawdown, and risk-discipline flags.
+3. **Trading session** — USD training account, random historical start, candle stepping/auto-play, market BUY/SELL, risk %, stop, target, approximate lot sizing, manual close, session P/L, max drawdown, and risk-discipline flags.
 4. **Historical events** — mystery challenges around sourced real-world central-bank/intervention events. The headline/date is revealed only after your decision and replay.
+
+### Desktop data install
+Inside the Mac app, Practice shows:
+
+- **Install Starter Data** — EUR/USD, GBP/USD, USD/JPY.
+- **Install Full 6-Pair Data** — adds AUD/USD, USD/CAD, USD/CHF.
+
+The app downloads 2020–2025 **M15 bid OHLC** from Dukascopy via `dukascopy-node`, then aggregates the same candles into **H1 and H4** locally. No fake fallback candles are used.
 
 ### Progress
 - Lesson completion and quiz accuracy.
@@ -23,37 +59,6 @@ Practice has four sub-modes so the main UI does not turn into a cockpit:
 - Spaced-repetition due status.
 - Historical replay journal.
 - Trading-session summaries and drawdown.
-
-## Quick start
-
-Requires Node.js 18+.
-
-```bash
-npm install
-npm run dev
-```
-
-Open **http://127.0.0.1:4173**.
-
-The learning course works immediately. Historical Practice modes require the local data pack.
-
-## Install real 2020–2025 data
-
-Sample pack — EUR/USD, GBP/USD, USD/JPY:
-
-```bash
-npm run data:sample
-```
-
-Full pack — EUR/USD, GBP/USD, USD/JPY, AUD/USD, USD/CAD, USD/CHF:
-
-```bash
-npm run data:all
-```
-
-V0.2 downloads **M15 bid OHLC** from Dukascopy via `dukascopy-node`, then locally aggregates the same candles into **H1 and H4**. That keeps timeframe relationships internally consistent. The six-year M15 pack is much larger than v0.1 H1-only data and can take a while to download.
-
-Historical JSON stays local and is ignored by Git.
 
 ## Simulator accuracy boundaries
 
@@ -66,6 +71,31 @@ Historical JSON stays local and is ignored by Git.
 - The trainer flags risk above 2% as a discipline warning. That is a learning guardrail, not a universal trading rule.
 - PHT display uses the IANA timezone `Asia/Manila`.
 
+## Developer / browser mode
+
+Only developers need Node.js:
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:4173`.
+
+Developer data commands:
+
+```bash
+npm run data:sample
+npm run data:all
+```
+
+Desktop development/build commands:
+
+```bash
+npm run desktop:dev
+npm run desktop:build:mac
+```
+
 ## Testing
 
 ```bash
@@ -73,21 +103,7 @@ npm test
 npm run check
 ```
 
-The release gate covers math, pip conventions, position sizing, P/L conversion for USD majors, bracket ambiguity, technical indicators, drill generation, spaced repetition, H1/H4 aggregation, sourced events, static feature checks, JS syntax, and manual Chromium interaction QA.
-
-## Easy updates
-
-If you cloned the repo with Git:
-
-```bash
-npm run update
-```
-
-This performs a fast-forward pull, refreshes dependencies, and reruns release checks. Downloaded historical data and browser progress stay local.
-
-macOS: double-click `start.command` after setup.
-
-Windows: double-click `start.bat` after setup.
+The release gate covers forex math, pip conventions, position sizing, P/L conversion for USD majors, bracket ambiguity, indicators, drill generation, spaced repetition, aggregation, historical-event sourcing, desktop syntax, static feature checks, and browser interaction QA.
 
 ## Release workflow
 
@@ -96,18 +112,17 @@ feature/*
    ↓
 build + tests
    ↓
-Chromium interaction QA
-   ↓
-UX/UI review
-Senior developer review
-Teacher/instructor review
-Forex-accuracy review
+UX/UI + Senior Dev + Instructor + Forex review
    ↓
 PR + GitHub Actions
    ↓
 main
+   ↓
+macOS universal PKG/ZIP build
+   ↓
+GitHub Release
 ```
 
-See `docs/RELEASE_REVIEW.md` and `docs/DATA_SOURCES.md`.
+See `docs/RELEASE_REVIEW.md`, `docs/DATA_SOURCES.md`, and `docs/MAC_APP.md`.
 
 This project is educational software, not financial advice, a signal service, a broker, or a profitability claim. Past market behavior does not guarantee future results.
