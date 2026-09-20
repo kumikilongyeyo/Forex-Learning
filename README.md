@@ -1,47 +1,70 @@
 # Forex Lab PH
 
-A simple Taglish forex learning guide + historical replay trainer that runs on localhost. The learning UI is deliberately minimal: **Learn**, **Practice**, **Progress**, and **Sources**.
+A localhost-first Taglish forex learning guide and historical practice lab. The UI stays deliberately simple: **Learn**, **Practice**, **Progress**, and **Sources**.
+
+## What v0.2 includes
+
+### Learn
+- 60 sequential core lessons across 10 modules.
+- Taglish explanations with quiz-gated progression.
+- Foundations → chart reading → structure → risk → indicators → sessions → fundamentals → backtesting → psychology.
+
+### Practice
+Practice has four sub-modes so the main UI does not turn into a cockpit:
+
+1. **Dense drills** — 20-question sessions generated from random historical windows. Categories cover structure, future-outcome buckets, candle reading, EMA alignment, RSI zones, and USD-major risk sizing. Weak and due skills are weighted more heavily using local spaced repetition.
+2. **Replay** — random historical window with the future hidden. Lock BUY / SELL / NO TRADE, then reveal +1, +5, or all future candles.
+3. **Trading session** — USD training account, random historical start, live-style candle stepping/auto-play, market BUY/SELL, risk %, stop, target, approximate lot sizing, manual close, session P/L, max drawdown, and risk-discipline flags.
+4. **Historical events** — mystery challenges around sourced real-world central-bank/intervention events. The headline/date is revealed only after your decision and replay.
+
+### Progress
+- Lesson completion and quiz accuracy.
+- Dense-drill accuracy by skill.
+- Spaced-repetition due status.
+- Historical replay journal.
+- Trading-session summaries and drawdown.
 
 ## Quick start
 
-Requires Node.js 18+. The easiest launch is `start.command` on macOS or `start.bat` on Windows. From a terminal:
+Requires Node.js 18+.
 
 ```bash
+npm install
 npm run dev
 ```
 
 Open **http://127.0.0.1:4173**.
 
-The curriculum works immediately. Practice mode requires real historical candles.
+The learning course works immediately. Historical Practice modes require the local data pack.
 
-## Install real 2020–2025 practice data
+## Install real 2020–2025 data
+
+Sample pack — EUR/USD, GBP/USD, USD/JPY:
 
 ```bash
-npm install
 npm run data:sample
-npm run dev
 ```
 
-`data:sample` downloads H1 data for EUR/USD, GBP/USD and USD/JPY for 2020–2025 using `dukascopy-node`. `data:all` expands to six major pairs.
+Full pack — EUR/USD, GBP/USD, USD/JPY, AUD/USD, USD/CAD, USD/CHF:
 
-Historical JSON stays local and is ignored by Git because it is generated data and can become large.
+```bash
+npm run data:all
+```
 
-## Modes
+V0.2 downloads **M15 bid OHLC** from Dukascopy via `dukascopy-node`, then locally aggregates the same candles into **H1 and H4**. That keeps timeframe relationships internally consistent. The six-year M15 pack is much larger than v0.1 H1-only data and can take a while to download.
 
-- **Learn** — 60 structured core lessons, Taglish explanations, objective quiz gates.
-- **Practice** — random real historical windows with the future hidden; lock BUY / SELL / NO TRADE, then replay actual candles.
-- **Progress** — local lesson/quiz/practice history.
-- **Sources** — data provenance and risk boundaries.
+Historical JSON stays local and is ignored by Git.
 
-## Accuracy rules
+## Simulator accuracy boundaries
 
-1. No fake historical candles.
-2. Practice separates **decision quality** from **outcome**.
-3. If both stop and target occur inside the same OHLC candle, higher-resolution data is required; never assume favorable ordering.
-4. FX is OTC, so provider feeds can differ slightly.
-5. PHT display uses `Asia/Manila` rather than hard-coded foreign session times.
-6. Indicators are taught as price-derived tools, not signals that guarantee direction.
-7. No real-money execution, personalized advice or profit claims.
+- **No fake historical candles.** Missing pack = Practice disables itself.
+- Spot FX is OTC; Dukascopy is one provider/feed, not a universal official FX price.
+- Dataset is **bid-side OHLC**. Trading-session P/L does **not** model spread, ask-side entry, slippage, commissions, swaps, or latency.
+- Position sizing uses a **USD training account** and supports the six USD-major pairs in the data pack.
+- If stop and target are both touched inside the same OHLC candle, the result is marked **ambiguous** instead of guessing which happened first.
+- Dense-drill “correct answers” use explicit trainer rules. Structure labels are rule-based classifications; future-direction drills are hindsight outcome buckets, not trading signals.
+- The trainer flags risk above 2% as a discipline warning. That is a learning guardrail, not a universal trading rule.
+- PHT display uses the IANA timezone `Asia/Manila`.
 
 ## Testing
 
@@ -50,7 +73,9 @@ npm test
 npm run check
 ```
 
-## Easy patch updates
+The release gate covers math, pip conventions, position sizing, P/L conversion for USD majors, bracket ambiguity, technical indicators, drill generation, spaced repetition, H1/H4 aggregation, sourced events, static feature checks, JS syntax, and manual Chromium interaction QA.
+
+## Easy updates
 
 If you cloned the repo with Git:
 
@@ -58,24 +83,31 @@ If you cloned the repo with Git:
 npm run update
 ```
 
-This performs a fast-forward `git pull`, installs pinned dependencies, and reruns the release checks. Downloaded historical data is ignored by Git and stays local. Browser learning progress also stays local.
+This performs a fast-forward pull, refreshes dependencies, and reruns release checks. Downloaded historical data and browser progress stay local.
 
-## Patch workflow
+macOS: double-click `start.command` after setup.
 
-Use feature branches and pull requests:
+Windows: double-click `start.bat` after setup.
+
+## Release workflow
 
 ```text
-main              released / passing
-feature/*         new learning or simulator work
-fix/*             patches
+feature/*
+   ↓
+build + tests
+   ↓
+Chromium interaction QA
+   ↓
+UX/UI review
+Senior developer review
+Teacher/instructor review
+Forex-accuracy review
+   ↓
+PR + GitHub Actions
+   ↓
+main
 ```
 
-Release only after tests + role review in `docs/RELEASE_REVIEW.md` pass.
+See `docs/RELEASE_REVIEW.md` and `docs/DATA_SOURCES.md`.
 
-## Data / learning sources
-
-- Historical candles: `dukascopy-node` / Dukascopy data feed
-- Risk and OTC-market mechanics: U.S. CFTC
-- Historical macro lessons: official Fed, BLS, ECB, BOE, BOJ and government releases
-
-This project is educational software, not financial advice. Past market behavior does not guarantee future results.
+This project is educational software, not financial advice, a signal service, a broker, or a profitability claim. Past market behavior does not guarantee future results.

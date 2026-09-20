@@ -1,54 +1,61 @@
-# Release review — v0.1.0
+# Release review — v0.2.0
 
-Release gate uses four lenses. “10/10” means every listed release criterion passes; it is not a claim of objective perfection or guaranteed trading correctness.
+“10/10” means every criterion defined below passes. It does **not** mean financial markets, discretionary chart interpretation, or the software can never produce an edge case.
 
 ## Senior UX/UI designer — 10/10 gate
-- [x] Only four top-level sections.
-- [x] Primary actions visible without nested navigation.
-- [x] Learning and practice are separated.
-- [x] Responsive layout for desktop/mobile.
-- [x] Minimal palette and restrained decoration.
-- [x] Practice warns when real data is not installed instead of showing fake data.
+- [x] Only four top-level sections remain: Learn / Practice / Progress / Sources.
+- [x] Practice complexity is contained in one four-item subnav.
+- [x] Dense drill screen keeps chart + one question panel only.
+- [x] Replay actions are progressive: decision → reveal.
+- [x] Trading session separates account stats, chart controls, and trade ticket.
+- [x] Historical-event context appears after the decision/replay, reducing hindsight leakage.
+- [x] Responsive desktop/mobile CSS retained.
+- [x] Missing historical data shows one clear installer path instead of fake fallback content.
 
 ## Senior developer — 10/10 gate
-- [x] Dependency-free learning UI; no framework needed at runtime.
-- [x] Pure calculation functions covered by automated tests.
-- [x] Historical data is generated locally and excluded from Git.
-- [x] Static server prevents accidental file-directory browsing.
-- [x] Future candles are hidden until a decision is locked.
-- [x] Intrabar both-hit case is marked ambiguous in core logic.
-- [x] `npm run check` passes.
-- [x] Browser interaction harness passes Learn → quiz → Practice empty state → Progress with zero page errors.
-- [x] Replay harness passes decision lock → next candle → full reveal → PHT timestamp → completed controls disabled.
+- [x] Plain HTML/CSS/JS runtime; no frontend framework required.
+- [x] 21 automated tests pass.
+- [x] USD-major pip value and lot-size math tested.
+- [x] Quote-USD and base-USD manual P/L math tested.
+- [x] Stop/target both-hit candle remains explicitly ambiguous.
+- [x] M15 → H1/H4 OHLC aggregation extracted to a pure tested function.
+- [x] Dense-drill generation tested across all six skills.
+- [x] Spaced-repetition reset/prioritization tested.
+- [x] Event nearest-timestamp lookup and source coverage tested.
+- [x] Static gate verifies four practice modes, M15/H1/H4 data path, bid price type, >=8 sourced events, and >=60 lessons.
+- [x] JavaScript syntax checks cover app, chart, core, curriculum, drills, events, data utilities, downloader, server, updater.
+- [x] Chromium inline interaction QA passes Dense Drills → Replay → Trading Session → Historical Events → Progress with zero page/console errors.
+- [x] QA mock candles are browser-test-only and removed before release.
 
 ## Teacher / instructor — 10/10 gate
-- [x] Curriculum progresses foundations → charts → structure → risk → indicators → sessions → fundamentals → backtesting → psychology.
-- [x] Every lesson has an explicit learning objective.
-- [x] Every lesson has a knowledge check.
-- [x] Explanations distinguish observation from prediction.
-- [x] No-trade is taught as a valid decision.
-- [x] Outcomes are separated from decision quality.
+- [x] Existing structured curriculum remains sequential and quiz gated.
+- [x] Dense drills are repeated retrieval practice instead of one-off examples.
+- [x] Weak/due categories reappear via spaced repetition.
+- [x] Difficulty tiers progressively hide pair/date/context clues.
+- [x] Future-outcome drill explicitly teaches hindsight-vs-signal distinction.
+- [x] No-trade remains a valid replay decision.
+- [x] Risk sizing is practiced numerically rather than described only in prose.
+- [x] Trading-session mode makes the learner set risk, stop and target before seeing future candles.
+- [x] Historical-event challenges reveal primary-source context after the learner commits.
 
 ## Forex accuracy review — 10/10 gate
-- [x] Base/quote, bid/ask, spread, pip conventions correct.
-- [x] JPY pip convention handled in code/tests.
-- [x] RSI/EMA/ATR described as derived tools, not guarantees.
-- [x] R-multiple, risk %, drawdown and leverage lessons avoid profit promises.
-- [x] Spot FX OTC caveat is explicit.
-- [x] PHT uses Asia/Manila and warns about foreign DST shifts.
-- [x] Macro lessons prefer official primary sources.
-- [x] No personalized trade calls or broker execution.
-
-## Remaining planned work after v0.1.0
-- Add M15/H4 aggregation from locally downloaded M1 data.
-- Add event-mode overlays with primary-source citations per event.
-- Add structured strategy-specific drills where “correct” means rule compliance, not hindsight profit.
-- Add Playwright/browser CI once kept lightweight enough for the repo.
+- [x] JPY and non-JPY pip conventions remain tested.
+- [x] Position-size math uses USD account + USD-major-specific pip value.
+- [x] Manual P/L handles pairs where USD is quote or base.
+- [x] Bid-side OHLC limitation is explicit; no broker-grade P/L claim.
+- [x] Spread/slippage/commission/swap/latency omissions are explicit.
+- [x] Spot FX OTC caveat remains explicit.
+- [x] EMA/RSI/ATR labels are descriptive, not guaranteed signals.
+- [x] Structure labels disclose their algorithmic ruleset.
+- [x] Event claims link to official Fed/ECB/BOE/BOJ/MOF material.
+- [x] Coarse event anchors are disclosed when primary sources do not establish exact intraday timing.
+- [x] PHT uses `Asia/Manila`.
+- [x] No personalized trade calls, real-money execution, or profit promises.
 
 ## Final verification evidence
 
-- Unit tests: 6/6 passing.
-- Static gate: 60 lessons found; BUY/SELL/NO TRADE and Asia/Manila checks pass.
-- JavaScript syntax checks: app, chart, core, curriculum, downloader pass.
-- HTTP smoke: root page, JS asset and manifest routes respond correctly.
-- Browser QA: rendered through system Chromium with an inline test harness because this environment blocks browser navigation to localhost. QA-only mock candles were used only to exercise UI behavior; the released app itself refuses to fabricate historical candles.
+- Automated tests: **21/21 passing**.
+- Static gate: **60 lessons, 4 practice modes, M15/H1/H4 path, 8 sourced events**.
+- Chromium interaction QA: **pass, zero page/console errors**.
+- Visual review: dense-drill, trading-session, event-reveal and progress screens checked at 1440×1000.
+- Release must still pass GitHub Actions on the exact PR head and again on `main` after merge.
