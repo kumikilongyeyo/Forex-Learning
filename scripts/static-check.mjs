@@ -18,7 +18,7 @@ for (const term of ['forexlab://app/index.html','install-data','market-data','cl
 const preload = await readFile('desktop/preload.cjs','utf8');
 for (const term of ['Install Starter Data','Install Full 6-Pair Data','Check for Updates']) if (!preload.includes(term)) throw new Error(`Desktop UI bridge missing ${term}`);
 const pkg = JSON.parse(await readFile('package.json','utf8'));
-if (pkg.version !== '0.3.0' || pkg.build?.pkg?.overwriteAction !== 'upgrade') throw new Error('Mac desktop package/update config mismatch');
+if (pkg.version !== '0.3.1' || pkg.build?.pkg?.overwriteAction !== 'upgrade') throw new Error('Desktop package/update config mismatch');
 if (!pkg.scripts?.['desktop:build:win']?.includes('--win nsis zip --x64')) throw new Error('Windows build script missing');
 if (pkg.build?.nsis?.guid !== 'E8A7C955-2B4F-4A31-9A12-2C53A0F0B0E4') throw new Error('Windows upgrade GUID changed or missing');
 if (pkg.build?.nsis?.oneClick !== false || pkg.build?.nsis?.allowToChangeInstallationDirectory !== false) throw new Error('Windows assisted installer policy mismatch');
