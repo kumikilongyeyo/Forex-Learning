@@ -1,5 +1,5 @@
 import { modules, lessonCount } from './curriculum.js';
-import { loadProgress, saveProgress, toPhilippineTime, directionOutcome, evaluateBracket, riskReward } from './core.js';
+import { loadProgress, saveProgress, toPhilippineTime, directionOutcome } from './core.js';
 import { renderCandles } from './chart.js';
 
 const app = document.querySelector('#app');
@@ -10,7 +10,6 @@ let activeLesson = null;
 let manifest = null;
 let dataset = null;
 let scenario = null;
-let revealTimer = null;
 
 const escapeHtml = s => String(s).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));
 
@@ -124,7 +123,6 @@ async function renderPractice() {
 }
 
 async function startScenario() {
-  clearInterval(revealTimer);
   const index=Number(app.querySelector('#datasetSelect').value);
   const d=manifest.datasets[index];
   if(!dataset || dataset.__path!==d.path){
