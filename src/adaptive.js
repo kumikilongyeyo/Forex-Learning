@@ -29,12 +29,20 @@ export const DEPENDENCIES = {
   'stop-placement': ['volatility', 'structure', 'risk'],
   discipline: ['regime', 'risk'],
   execution: ['entry-selection', 'stop-placement', 'risk', 'discipline'],
-  fundamentals: ['sessions'],
+  fundamentals: ['sessions']
 };
 
 const MODULE_SKILLS = {
   m1: 'foundations', m2: 'candles', m3: 'structure', m4: 'levels', m5: 'risk',
   m6: 'indicators', m7: 'sessions', m8: 'fundamentals', m9: 'execution', m10: 'discipline'
+};
+
+const CORE_FOCUS = {
+  foundations: 'Forex Foundations', candles: 'Candles & Price', structure: 'Market Structure',
+  regime: 'Market Structure', levels: 'Support, Resistance & Location', risk: 'Risk & Position Sizing',
+  volatility: 'Indicators / ATR', indicators: 'Indicators', sessions: 'Sessions & Philippine Time',
+  fundamentals: 'Fundamentals & News', 'entry-selection': 'Strategy Building & Backtesting',
+  'stop-placement': 'Risk & Position Sizing', discipline: 'Psychology & Execution', execution: 'Psychology & Execution'
 };
 
 const DRILL_SKILL_MAP = {
@@ -186,16 +194,8 @@ export function clamp(n, min = 0, max = 100) { return Math.max(min, Math.min(max
 
 export function defaultCoachState() {
   return {
-    version: 1,
-    attempts: [],
-    contextTime: {},
-    sessions: [],
-    explanationLevels: {},
-    interests: {},
-    settings: { sessionMinutes: 30, autoRecommend: true },
-    gauntlets: [],
-    lastSeenProgressHash: '',
-    activeSession: null
+    version: 1, attempts: [], contextTime: {}, sessions: [], explanationLevels: {}, interests: {},
+    settings: { sessionMinutes: 30, autoRecommend: true }, gauntlets: [], lastSeenProgressHash: '', activeSession: null
   };
 }
 
@@ -221,7 +221,6 @@ export function mapLessonToSkill(id = '') {
   const moduleId = String(id).match(/^(m\d+)/)?.[1];
   return MODULE_SKILLS[moduleId] || 'foundations';
 }
-
 export function mapDrillSkill(skill = '') { return DRILL_SKILL_MAP[skill] || skill || 'foundations'; }
 
 export function progressFingerprint(progress = {}) {
@@ -251,9 +250,15 @@ function recencyWeight(at, now) {
   const ageDays = Math.max(0, (now - new Date(at || 0).getTime()) / 86400000);
   return Math.max(0.35, Math.exp(-ageDays / 30));
 }
-
 export function skillEvidence(coach, skill, now = Date.now()) {
   return (coach.attempts || []).filter(a => a.skill === skill).map(a => ({ ...a, weight:recencyWeight(a.at, now) }));
+}
+
+function evidenceCap(attempts) {
+  if (attempts <= 1) return 45;
+  if (attempts <= 3) return 60;
+  if (attempts <= 6) return 75;
+  return 100;
 }
 
 export function masteryForSkill(coach, skill, now = Date.now()) {
@@ -265,7 +270,8 @@ export function masteryForSkill(coach, skill, now = Date.now()) {
   const volume = clamp(items.length / 12, 0, 1);
   const recent = items.slice(-5);
   const consistency = recent.length ? recent.filter(a => a.correct).length / recent.length : accuracy;
-  const score = Math.round(clamp((accuracy * 64) + (consistency * 20) + (volume * 16)));
+  const rawScore = clamp((accuracy * 64) + (consistency * 20) + (volume * 16));
+  const score = Math.round(Math.min(rawScore, evidenceCap(items.length)));
   const confidenced = items.filter(a => Number.isFinite(a.confidence));
   const confidenceAvg = confidenced.length ? confidenced.reduce((s,a) => s + a.confidence, 0) / confidenced.length : null;
   const confidenceGap = confidenceAvg == null ? null : Math.round(confidenceAvg - accuracy * 100);
@@ -286,9 +292,9 @@ export function failureType(attempt) {
   if (Number(attempt.confidence) >= 80) return 'misconception';
   if (attempt.skill === 'risk') return 'calculation / risk gap';
   if (attempt.skill === 'discipline') return 'discipline / impulse gap';
-  if (attempt.skill === 'regime' || attempt.skill === 'structure' || attempt.skill === 'candles' || attempt.skill === 'levels') return 'recognition gap';
-  if (attempt.skill === 'entry-selection' || attempt.skill === 'stop-placement' || attempt.skill === 'execution') return 'execution gap';
-  if (attempt.skill === 'fundamentals' || attempt.skill === 'sessions') return 'context gap';
+  if (['regime','structure','candles','levels'].includes(attempt.skill)) return 'recognition gap';
+  if (['entry-selection','stop-placement','execution'].includes(attempt.skill)) return 'execution gap';
+  if (['fundamentals','sessions'].includes(attempt.skill)) return 'context gap';
   return 'knowledge gap';
 }
 
@@ -300,6 +306,19 @@ export function failureSummary(coach) {
     counts[type] = (counts[type] || 0) + 1;
   }
   return Object.entries(counts).map(([type,count]) => ({ type,count })).sort((a,b) => b.count - a.count);
+}
+
+export function learningStopLoss(coach, now = Date.now()) {
+  const recent = (coach.attempts || []).filter(a => now - new Date(a.at || 0).getTime() <= 90 * 60000).slice(-8);
+  if (recent.length < 3) return null;
+  const lastSkill = recent.at(-1)?.skill;
+  const same = recent.filter(a => a.skill === lastSkill).slice(-4);
+  const trailing = [...same].reverse();
+  let consecutiveMisses = 0;
+  for (const a of trailing) { if (a.correct) break; consecutiveMisses += 1; }
+  const wrongCount = same.filter(a => !a.correct).length;
+  if (consecutiveMisses < 3 && wrongCount < 4) return null;
+  return { skill:lastSkill, misses:Math.max(consecutiveMisses, wrongCount), prerequisite:(DEPENDENCIES[lastSkill] || [])[0] || null };
 }
 
 export function detectRootGap(coach, now = Date.now()) {
@@ -318,7 +337,8 @@ export function detectRootGap(coach, now = Date.now()) {
 }
 
 export function explanationLevelFor(coach, skill) {
-  const wrong = skillEvidence(coach, skill).filter(a => !a.correct).length;
+  const recent = skillEvidence(coach, skill).slice(-8);
+  const wrong = recent.filter(a => !a.correct).length;
   const manual = Number(coach.explanationLevels?.[skill] || 0);
   return clamp(Math.max(manual, wrong <= 1 ? 0 : wrong <= 3 ? 1 : wrong <= 5 ? 2 : 3), 0, 3);
 }
@@ -374,10 +394,20 @@ export function fatigueScore(attempts = []) {
   return { score, label:score >= 70 ? 'Stop soon' : score >= 48 ? 'Tiring' : score >= 28 ? 'Working' : 'Fresh', reasons };
 }
 
+export function difficultyBand(coach, skill) {
+  const m = masteryForSkill(coach, skill);
+  if (m.attempts < 2 || m.score < 35) return 'guided';
+  if (m.score < 55) return 'easy';
+  if (m.score < 75) return 'normal';
+  if (m.score < 88) return 'hard';
+  return m.due ? 'retention' : 'expert';
+}
+
 export function recommendedMinutes(coach) {
+  const stop = learningStopLoss(coach);
   const root = detectRootGap(coach);
   const fatigue = fatigueScore(coach.attempts || []);
-  if (fatigue.score >= 70) return 15;
+  if (stop || fatigue.score >= 70) return 15;
   const due = buildMasteryModel(coach).filter(x => x.attempts && x.due).length;
   if (root && due >= 2) return 45;
   if (root || due) return 30;
@@ -386,17 +416,29 @@ export function recommendedMinutes(coach) {
 
 export function sessionPlan(coach, requestedMinutes = null) {
   const root = detectRootGap(coach);
+  const stop = learningStopLoss(coach);
   const minutes = clamp(Number(requestedMinutes) || recommendedMinutes(coach), 10, 90);
   const heavyGap = root && root.score < 48;
-  const ratios = heavyGap ? [0.15,0.40,0.20,0.15,0.10] : [0.15,0.25,0.30,0.20,0.10];
-  const names = ['Warm-up / retention', root ? `Gap lesson: ${SKILL_META[root.skill]?.label || root.skill}` : 'Weak-skill review', 'Main curriculum', 'Historical / applied practice', 'Mini Gauntlet + review'];
+  const ratios = heavyGap ? [0.10,0.45,0.25,0.15,0.05] : [0.10,0.25,0.40,0.20,0.05];
+  const coreFocus = root ? CORE_FOCUS[root.skill] || 'Next core lesson' : 'Next core lesson';
+  const remediationName = stop && stop.skill === root?.skill
+    ? `Learning stop-loss: pause ${SKILL_META[stop.skill]?.label || stop.skill}; review ${stop.prerequisite ? SKILL_META[stop.prerequisite]?.label || stop.prerequisite : 'the prerequisite'} instead`
+    : root ? `Gap lesson: ${SKILL_META[root.skill]?.label || root.skill}` : 'Weak-skill review';
+  const names = ['Warm-up / retention', remediationName, `Next major lesson: ${coreFocus}`, 'Historical / applied practice', 'Mini Gauntlet + review'];
   let used = 0;
   const phases = ratios.map((ratio,i) => {
-    const m = i === ratios.length - 1 ? minutes - used : Math.max(2, Math.round(minutes * ratio));
+    const remainingPhases = ratios.length - i - 1;
+    const maxHere = Math.max(1, minutes - used - remainingPhases);
+    const proposed = i === ratios.length - 1 ? minutes - used : Math.max(1, Math.round(minutes * ratio));
+    const m = Math.min(maxHere, proposed);
     used += m;
     return { name:names[i], minutes:m };
   });
-  return { minutes, rootGap:root, phases, reason:root ? `${SKILL_META[root.skill]?.label || root.skill} is the highest-priority gap based on repeated misses and prerequisite impact.` : 'No major root gap yet; keep a balanced session and collect more evidence.' };
+  const reason = stop && stop.skill === root?.skill
+    ? `You have repeated the same miss ${stop.misses} times recently. Learning Stop-Loss is active: stop grinding that exact item and rescue the prerequisite before retesting.`
+    : root ? `${SKILL_META[root.skill]?.label || root.skill} is the highest-priority gap based on repeated misses and prerequisite impact.`
+    : 'No major root gap yet; keep a balanced session and collect more evidence.';
+  return { minutes, rootGap:root, stopLoss:stop, phases, reason };
 }
 
 export function chooseGauntletQuestions(coach, count = 10) {
@@ -449,5 +491,5 @@ export function weeklyReport(coach, now = Date.now()) {
   const rows = Object.entries(bySkill).map(([skill,v]) => ({ skill, attempts:v.attempts, accuracy:Math.round(v.correct/v.attempts*100) })).sort((a,b) => a.accuracy - b.accuracy);
   const root = detectRootGap(coach, now);
   const interest = interestProfile(coach)[0] || null;
-  return { minutes, attempts:attempts.length, weakest:rows[0] || null, strongest:rows.at(-1) || null, rootGap:root, topInterest:interest };
+  return { minutes, attempts:attempts.length, weakest:rows[0] || null, strongest:rows.at(-1) || null, rootGap:root, topInterest:interest, stopLoss:learningStopLoss(coach, now) };
 }
