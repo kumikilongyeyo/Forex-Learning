@@ -1,5 +1,5 @@
 import { readFile, access } from 'node:fs/promises';
-const required = ['index.html','src/app.js','src/core.js','src/chart.js','src/curriculum.js','src/drills.js','src/events.js','src/data-utils.js','src/styles.css','public/data/manifest.json','README.md'];
+const required = ['index.html','src/app.js','src/core.js','src/chart.js','src/curriculum.js','src/drills.js','src/events.js','src/data-utils.js','src/styles.css','public/data/manifest.json','desktop/main.cjs','desktop/preload.cjs','docs/MAC_APP.md','README.md'];
 for (const f of required) await access(f);
 const html = await readFile('index.html','utf8');
 if (!html.includes('Forex Lab PH')) throw new Error('Title missing');
@@ -13,4 +13,10 @@ for (const term of ["timeframe: 'm15'", "'H1'", "'H4'", "priceType: 'bid'"]) if 
 const events = await readFile('src/events.js','utf8');
 const eventCount = (events.match(/sourceUrl:/g) || []).length;
 if (eventCount < 8) throw new Error(`Expected >=8 sourced historical events; found ${eventCount}`);
-console.log(`Static checks passed: ${lessonMatches.length} lessons, 4 practice modes, M15/H1/H4 data path, ${eventCount} sourced events.`);
+const desktop = await readFile('desktop/main.cjs','utf8');
+for (const term of ['forexlab://app/index.html','install-data','market-data','clearCache','releases/latest']) if (!desktop.includes(term)) throw new Error(`Desktop shell missing ${term}`);
+const preload = await readFile('desktop/preload.cjs','utf8');
+for (const term of ['Install Starter Data','Install Full 6-Pair Data','Check for Updates']) if (!preload.includes(term)) throw new Error(`Desktop UI bridge missing ${term}`);
+const pkg = JSON.parse(await readFile('package.json','utf8'));
+if (pkg.version !== '0.3.0' || pkg.build?.pkg?.overwriteAction !== 'upgrade') throw new Error('Desktop package/update config mismatch');
+console.log(`Static checks passed: ${lessonMatches.length} lessons, 4 practice modes, desktop no-Terminal installer path, M15/H1/H4 data path, ${eventCount} sourced events.`);
