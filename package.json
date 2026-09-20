@@ -1,21 +1,71 @@
 {
   "name": "forex-learning",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "test": "node --test tests/*.test.js",
-    "check": "npm run test && node scripts/static-check.mjs && node --check src/app.js && node --check src/chart.js && node --check src/core.js && node --check src/curriculum.js && node --check src/drills.js && node --check src/events.js && node --check src/data-utils.js && node --check scripts/download-history.mjs && node --check scripts/serve.mjs && node --check scripts/update.mjs",
+    "check": "npm run test && node scripts/static-check.mjs && node --check src/app.js && node --check src/chart.js && node --check src/core.js && node --check src/curriculum.js && node --check src/drills.js && node --check src/events.js && node --check src/data-utils.js && node --check scripts/download-history.mjs && node --check scripts/serve.mjs && node --check scripts/update.mjs && npm run desktop:check",
     "data:sample": "node scripts/download-history.mjs --sample",
     "data:all": "node scripts/download-history.mjs --all",
     "start": "node scripts/serve.mjs",
-    "update": "node scripts/update.mjs"
+    "update": "node scripts/update.mjs",
+    "desktop:dev": "electron .",
+    "desktop:check": "node --check desktop/main.cjs && node --check desktop/preload.cjs",
+    "desktop:build:mac": "electron-builder --mac pkg zip --universal"
   },
   "dependencies": {
     "dukascopy-node": "1.50.0"
   },
   "engines": {
     "node": ">=18"
+  },
+  "main": "desktop/main.cjs",
+  "description": "Forex Lab PH — Taglish forex learning and historical practice desktop app.",
+  "devDependencies": {
+    "electron": "43.7.3",
+    "electron-builder": "26.16.1"
+  },
+  "build": {
+    "appId": "com.kumikilongyeyo.forexlabph",
+    "productName": "Forex Lab PH",
+    "asar": true,
+    "files": [
+      "desktop/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "index.html",
+        "to": "web/index.html"
+      },
+      {
+        "from": "src",
+        "to": "web/src"
+      },
+      {
+        "from": "public/data/manifest.json",
+        "to": "web/public/data/manifest.json"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.education",
+      "identity": "-",
+      "minimumSystemVersion": "11.0",
+      "artifactName": "Forex-Lab-PH-${version}-${arch}.${ext}",
+      "target": [
+        "pkg",
+        "zip"
+      ]
+    },
+    "pkg": {
+      "installLocation": "/Applications",
+      "isRelocatable": false,
+      "overwriteAction": "upgrade",
+      "mustClose": [
+        "com.kumikilongyeyo.forexlabph"
+      ]
+    }
   }
 }
