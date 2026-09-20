@@ -17,6 +17,9 @@ protocol.registerSchemesAsPrivileged([
   }
 ]);
 
+const APP_ID = 'com.kumikilongyeyo.forexlabph';
+if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
+
 const RELEASE_URL = 'https://github.com/kumikilongyeyo/Forex-Learning/releases/latest';
 const PAIRS_SAMPLE = ['eurusd', 'gbpusd', 'usdjpy'];
 const PAIRS_ALL = ['eurusd', 'gbpusd', 'usdjpy', 'audusd', 'usdcad', 'usdchf'];
