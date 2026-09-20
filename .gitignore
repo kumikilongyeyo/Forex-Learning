@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+*.log
+# Historical datasets are downloaded locally. Keep manifest tracked, not large data packs.
+public/data/*.json
+!public/data/manifest.json
+
+# Local QA screenshots
+docs/ui-*.png

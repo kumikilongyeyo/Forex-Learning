@@ -1,0 +1,21 @@
+{
+  "name": "forex-learning",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "test": "node --test tests/*.test.js",
+    "check": "npm run test && node scripts/static-check.mjs",
+    "data:sample": "node scripts/download-history.mjs --sample",
+    "data:all": "node scripts/download-history.mjs --all",
+    "start": "node scripts/serve.mjs",
+    "update": "node scripts/update.mjs"
+  },
+  "dependencies": {
+    "dukascopy-node": "1.50.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
